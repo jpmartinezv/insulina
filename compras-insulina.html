@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Minsa solo compra insulina humana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: "Figtree", system-ui;
+      box-sizing: border-box;
+      background-color: #fef8e6;
+      position: relative;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 0 10px;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-gap: 20px;
+    }
+
+    @media (min-width: 420px) {
+      .chart-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 728px) {
+      .chart-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .chart {
+      width: 100%;
+    }
+
+    .bar {
+      opacity: 0.8;
+    }
+
+    .bar:hover {
+      opacity: 1;
+    }
+
+    .tooltip {
+      position: absolute;
+      background-color: rgba(65, 78, 53, 0.95);
+      color: white;
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    .source {
+      padding-top: 2rem;
+      font-size: 14px;
+      margin-bottom: 0;
+    }
+
+    .saludconlupa-isotipo {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>El Minsa solo compra insulina humana</h2>
+  <p>El Ministerio de Salud, que cubre a la mayor población de pacientes con diabetes tipo 1 y tipo 2, ha centrado sus compras en insulina humana porque tiene un menor costo que las insulinas análogas. Otras entidades, como EsSalud y el Instituto Nacional de Salud del Niño sí destinan su presupuesto para adquirir las versiones análogas.
+  </p>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #f11038;"></div>
+      <span>Insulina Humana</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #bcbd04;"></div>
+      <span>Insulinas Análogas</span>
+    </div>
+  </div>
+  <div class="chart-grid" id="charts"></div>
+  <p class="source">
+    Fuente: Sistema Electrónico de Contrataciones del Estado (Seace).
+  </p>
+  <a href="https://saludconlupa.com/" target="_blank" class="saludconlupa-isotipo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42 37.2" width="40px">
+      <rect fill="#414e35" y="27.5" width="9.8" height="9.8" />
+      <path fill="#414e35" d="M30.4,0H9.8V27.5H30.4c7.6,0,11.4-3.7,11.4-11.3v-4.9c0-7.5-3.8-11.3-11.4-11.3Zm1.7,16.9c0,1.5-.8,2.2-2.3,2.2h-10.3V8.4h10.3c1.5,0,2.3,.7,2.3,2.2v6.3Z" />
+    </svg>
+  </a>
+
+  <script>
+    const data = {
+      'Cenares': [
+        { year: 2018, human: 1406997, analog: 0 },
+        { year: 2019, human: 1090194, analog: 0 },
+        { year: 2020, human: 2193989, analog: 0 },
+        { year: 2021, human: 0, analog: 0 },
+        { year: 2022, human: 786959, analog: 0 },
+        { year: 2023, human: 575000, analog: 0 },
+        { year: 2024, human: 1822500, analog: 0 }
+      ],
+      'EsSalud': [
+        { year: 2018, human: 0, analog: 0 },
+        { year: 2019, human: 0, analog: 82682 },
+        { year: 2020, human: 0, analog: 187200 },
+        { year: 2021, human: 4326368, analog: 3309036 },
+        { year: 2022, human: 1009613, analog: 4419652 },
+        { year: 2023, human: 0, analog: 0 },
+        { year: 2024, human: 0, analog: 0 }
+      ],
+      'INSN': [
+        { year: 2018, human: 0, analog: 0 },
+        { year: 2019, human: 0, analog: 0 },
+        { year: 2020, human: 0, analog: 0 },
+        { year: 2021, human: 0, analog: 0 },
+        { year: 2022, human: 0, analog: 0 },
+        { year: 2023, human: 188500, analog: 0 },
+        { year: 2024, human: 219738, analog: 0 }
+      ],
+      'Ejército del Perú': [
+        { year: 2018, human: 123945, analog: 0 },
+        { year: 2019, human: 256745, analog: 0 },
+        { year: 2020, human: 0, analog: 0 },
+        { year: 2021, human: 236410, analog: 0 },
+        { year: 2022, human: 182640, analog: 0 },
+        { year: 2023, human: 0, analog: 0 },
+        { year: 2024, human: 198, analog: 0 }
+      ],
+      'Fuerza Aérea del Perú': [
+        { year: 2018, human: 0, analog: 0 },
+        { year: 2019, human: 0, analog: 361968 },
+        { year: 2020, human: 0, analog: 0 },
+        { year: 2021, human: 1176840, analog: 0 },
+        { year: 2022, human: 456288, analog: 0 },
+        { year: 2023, human: 414879, analog: 0 },
+        { year: 2024, human: 506624, analog: 2535 }
+      ],
+      'Policía Nacional del Perú': [
+        { year: 2018, human: 0, analog: 0 },
+        { year: 2019, human: 0, analog: 0 },
+        { year: 2020, human: 0, analog: 498000 },
+        { year: 2021, human: 0, analog: 0 },
+        { year: 2022, human: 151200, analog: 0 },
+        { year: 2023, human: 0, analog: 0 },
+        { year: 2024, human: 0, analog: 648000 }
+      ]
+    };
+
+    const margin = { top: 40, right: 0, bottom: 35, left: 40 };
+    const width = 350 - margin.left - margin.right;
+    const height = 200 - margin.top - margin.bottom;
+
+    const x = d3.scaleBand().range([0, width]).padding(0.1);
+    const y = d3.scaleLinear().range([height, 0]);
+
+    const color = d3.scaleOrdinal()
+      .domain(['human', 'analog'])
+      .range(['#f11038', '#bcbd04']);
+
+    // Calcular el máximo valor para todos los gráficos
+    const maxValue = d3.max(Object.values(data).flat(), d => d.human + d.analog);
+
+    // Crear el tooltip
+    const tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+
+    Object.entries(data).forEach(([institution, institutionData]) => {
+      const chart = d3.select("#charts")
+        .append("div")
+        .attr("class", "chart");
+
+      const svg = chart.append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      x.domain(institutionData.map(d => d.year));
+      y.domain([0, maxValue]);
+
+      svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-65)");
+
+      svg.append("g")
+        .call(d3.axisLeft(y)
+          .tickFormat(d => `S/ ${d / 1e6}M`));
+
+      const stack = d3.stack()
+        .keys(['human', 'analog'])
+        .order(d3.stackOrderNone)
+        .offset(d3.stackOffsetNone);
+
+      const stackedData = stack(institutionData);
+
+      svg.selectAll(".serie")
+        .data(stackedData)
+        .enter().append("g")
+        .attr("class", "serie")
+        .attr("fill", d => color(d.key))
+        .selectAll("rect")
+        .data(d => d)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", d => x(d.data.year))
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("width", x.bandwidth())
+        .on("mousemove", function (event, d) {
+          const type = d3.select(this.parentNode).datum().key;
+          const value = d[1] - d[0];
+          tooltip.transition()
+            .duration(200)
+            .style("opacity", .9);
+          tooltip.html(`${type === 'human' ? 'Insulina Humana' : 'Insulinas Análogas'}<br/>Año: ${d.data.year}<br/>Monto: S/ ${value.toLocaleString()}`)
+            .style("left", (event.pageX + 5) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function (d) {
+          tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+        });
+
+      svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", 0 - (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .style("font-weight", "bold")
+        .text(institution);
+    });
+  </script>
+</body>
+
+</html>
