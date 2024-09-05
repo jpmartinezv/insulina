@@ -123,7 +123,7 @@
     </svg>
   </a>
 
-  <script src="https://pym.nprapps.org/pym.v1.min.js" type="module"></script>
+  <script src="https://pym.nprapps.org/pym.v1.min.js"></script>
   <script type="module">
     const pymChild = new pym.Child();
     const data = {
@@ -271,9 +271,8 @@
         .style("font-size", "14px")
         .style("font-weight", "bold")
         .text(institution);
-
-      pymChild.sendHeight();
     });
+    pymChild.sendHeight();
   </script>
 </body>
 
